@@ -28,6 +28,10 @@ public:
 	/// <returns>カメラ</returns>
 	const Camera& GetCamera() { return camera_; }
 
+	const Matrix4x4& GetViewMatrix() const { return camera_.matView; }
+	const Matrix4x4& GetProjectionMatrix() const { return camera_.matProjection; }
+
+
 	/// <summary>
 	/// プロジェクション行列計算用のメンバ設定関数群
 	/// </summary>
@@ -35,6 +39,7 @@ public:
 	void SetAspectRatio(float value) { camera_.aspectRatio = value; }
 	void SetNearZ(float value) { camera_.nearZ = value; }
 	void SetFarZ(float value) { camera_.farZ = value; }
+
 
 private:
 	// 入力クラスのポインタ
