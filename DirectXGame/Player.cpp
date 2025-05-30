@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "Transform.h"
 #include <assert.h>
 
 using namespace KamataEngine;
@@ -6,6 +7,7 @@ using namespace KamataEngine;
 void Player::Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, uint32_t textureHandle) {
 	// NULLポインタチェック
 	assert(model);
+	assert(camera);
 
 	// モデルの設定
 	model_ = model;
@@ -19,12 +21,12 @@ void Player::Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera
 
 void Player::Update() {
 	// 行列を定数バッファに転送
-	worldTransform_.TransferMatrix();
+	UpdateWorldTransform(worldTransform_);
 
 }
 
 void Player::Draw() {  
-   model_->Draw(worldTransform_, *camera_, textureHandle_);  
+   model_->Draw(worldTransform_, *camera_);  
 }
 
 // デストラクタ
