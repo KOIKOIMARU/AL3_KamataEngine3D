@@ -2,6 +2,7 @@
 #include "KamataEngine.h"
 #include "Player.h"
 #include "Skydome.h"
+#include "MapChipField.h"
 #include <vector>
 
 // ゲームシーン
@@ -27,6 +28,8 @@ class GameScene {
 	Player* player_;
 	// 天球
 	Skydome skydome_;
+	// マップチップフィールド
+	MapChipField* mapChipField_;
 
 	// デストラクタ
 	~GameScene();
@@ -37,5 +40,8 @@ class GameScene {
 	void Update();
 	// 描画
 	void Draw();
+
+	void GenerateBlocks();
+
 
 };

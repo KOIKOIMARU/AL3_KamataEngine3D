@@ -17,6 +17,8 @@ void Player::Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera
 
 	// ワールド変換データの初期化
 	worldTransform_.Initialize();
+
+	worldTransform_.translation_ = {1.0f, 1.0f, 0.0f};
 }
 
 void Player::Update() {
