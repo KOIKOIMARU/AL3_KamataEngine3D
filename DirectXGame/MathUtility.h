@@ -1,6 +1,8 @@
-#include "Transform.h"
+#pragma once
+#include "KamataEngine.h"
 
-// 関数の作成
+using namespace KamataEngine;
+
 // x軸回転行列
 Matrix4x4 MakeRoteXMatrix(float radian) {
 	Matrix4x4 result = {
@@ -80,14 +82,5 @@ Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix) {
 	return {x, y, z};
 }
 
-// 線形補間関数（Vector3版）
+// 線形補間（Linear Interpolation）
 Vector3 Lerp(const Vector3& a, const Vector3& b, float t) { return {a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t}; }
-
-
-void UpdateWorldTransform(KamataEngine::WorldTransform& worldTransform) {
-	// アフィン変換行列の作成
-	worldTransform.matWorld_ = MakeAffineMatrix(worldTransform.scale_, worldTransform.rotation_, worldTransform.translation_);
-
-	// 行列を定数バッファに転送
-	worldTransform.TransferMatrix();
-};

@@ -5,12 +5,17 @@ using namespace KamataEngine;
 
 void GameScene::Initialize() {
 
+	// マップチップフィールドの初期化
+	mapChipField_ = new MapChipField();
+	mapChipField_->LoadMapChipCsv("Resources/block.csv");
+
+
 	// ファイルを指定してテクスチャを読み込む
 	textureHandle_ = TextureManager::Load("sample.png");
 	
 	// 3Dモデルの生成
 	model_ = Model::CreateFromOBJ("player",true);
-	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
+	modelSkydome_ = Model::CreateFromOBJ("sky_sphere", true);
 
 	// モデルブロックの生成
 	modelBlock_ = Model::Create();
@@ -22,18 +27,25 @@ void GameScene::Initialize() {
 	// デバッグカメラの初期化
 	debugCamera_ = new DebugCamera(1280,720);
 
+	// 座標をマップチップ番号で指定
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
+
 	// 自キャラの初期化
 	player_ = new Player();
-	player_->Initialize(model_, &camera_, textureHandle_);
+	player_->Initialize(model_, &camera_,playerPosition);
 
 	// 天球の初期化
 	skydome_.Initialize(modelSkydome_, &camera_, textureHandle_);
 
-	// マップチップフィールドの初期化
-	mapChipField_ = new MapChipField();
-	mapChipField_->LoadMapChipCsv("Resources/block.csv");
-
 	GenerateBlocks();
+
+	// カメラコントローラーの生成・初期化
+	cameraController_ = new CameraController();
+	cameraController_->SetCamera(&camera_);
+	cameraController_->SetTarget(player_);
+	cameraController_->Initialize();
+	cameraController_->Reset();
+
 }
 
 void GameScene::Update() {
@@ -58,6 +70,7 @@ void GameScene::Update() {
 	} else {
 		// ビュープロジェクション行列の転送と更新
 		camera_.UpdateMatrix();
+		cameraController_->Update();
 	}
 
 	// 自キャラの更新
@@ -124,6 +137,8 @@ GameScene::~GameScene() {
 		//worldTransformBlockLine.clear();
 	}
 	worldTransformBlocks_.clear();
+	// カメラコントローラーの解放
+	delete cameraController_;
 }
 
 void GameScene::GenerateBlocks() {
