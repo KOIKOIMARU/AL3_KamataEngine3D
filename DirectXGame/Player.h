@@ -1,12 +1,37 @@
 #pragma once
 #include "KamataEngine.h"
 #include "Transform.h" 
+#include "MapChipField.h"
+#define NOMINMAX
 #include <algorithm>
+
+#undef min
+#undef max
+
+class MapChipField;
+
 
 /// <summary>
 /// 自キャラ
 /// </summary>
 class Player {
+	// マップとの当たり判定情報
+	struct CollisionMapInfo {
+		bool isHitCeiling = false; // 天井衝突フラグ
+		bool isOnGround = false;   // 着地フラグ
+		bool isHitWall = false;    // 壁接触フラグ
+		Vector3 move;              // 実際に移動できた量
+	};
+
+	enum Corner {
+		kRightBottom, // 右下
+		kLeftBottom,  // 左下
+		kRightTop,    // 右上
+		kLeftTop,     // 左上
+
+		kNumCorner // 要素数
+	};
+
 private:
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransform_;
@@ -23,25 +48,32 @@ private:
 	};
 	LRDirection lrDirection_ = LRDirection::kRight;
 
-	float turnFirstRotationY_ = 0.0f;                 // 旋回開始時の角度
+	float turnFirstRotationY_ = 0.0f;                // 旋回開始時の角度
 	float turnTimer_ = 0.0f;                         // 旋回時間
 	static inline const float kAcceleration = 0.01f; // 移動速度
-	static inline const float kAttenuation = 0.98f;  // 減速率
+	static inline const float kAttenuation = 0.1f;   // 減速率
 	static inline const float kLimitRunSpeed = 0.1f; // 最大速度
-	static inline const float kTimeRun = 0.3f;    // 旋回時間<秒>
+	static inline const float kTimeRun = 0.3f;       // 旋回時間<秒>
 
-	bool onGround_ = true; // 地面にいるかどうか
+	bool onGround_ = true;                                  // 地面にいるかどうか
 	static inline const float kGravityAcceleration = 0.02f; // 重力加速度
-	static inline const float kLimitFallSpeed = 0.3f;        // 最大落下速度
-	static inline const float kJumpAcceleration = 0.3f;             // ジャンプ速度
+	static inline const float kLimitFallSpeed = 0.3f;       // 最大落下速度
+	static inline const float kJumpAcceleration = 0.3f;     // ジャンプ速度
+
+	// マップチップのポインタ
+	MapChipField* mapChipField_ = nullptr;
+
+	// キャラクターの当たり判定サイズ
+	static inline const float kWidth = 0.8f;
+	static inline const float kHeight = 0.8f;
+
 
 public:
-
 	// デストラクタ
 	~Player();
 
 	/// <summary>
-	/// 
+	///
 	/// </summary>
 	/// <param name="model"></param>
 	/// <param name="textureHandle"></param>
@@ -61,4 +93,22 @@ public:
 	const KamataEngine::WorldTransform& GetWorldTransform() const { return worldTransform_; }
 
 	const KamataEngine::Vector3& GetVelocity() const { return velocity_; }
+
+	// マップチップのセッター
+	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
+
+	void MoveInput();
+
+	void CheckCollisionMap(CollisionMapInfo& info); // スライドの「マップ衝突判定」
+
+	void CheckCollisionTop(CollisionMapInfo& info);
+	//void CheckCollisionBottom(CollisionMapInfo& info);
+	//void CheckCollisionRight(CollisionMapInfo& info);
+	//void CheckCollisionLeft(CollisionMapInfo& info);
+
+	Vector3 CornerPosition(const Vector3& center, Corner corner);
+
+	void ApplyCollisionResult(const CollisionMapInfo& info);
+
+	void HandleCeilingCollision(const CollisionMapInfo& info);
 };

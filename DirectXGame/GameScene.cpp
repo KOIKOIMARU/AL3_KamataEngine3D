@@ -46,6 +46,9 @@ void GameScene::Initialize() {
 	cameraController_->Initialize();
 	cameraController_->Reset();
 
+	// その後プレイヤーに渡す
+	player_->SetMapChipField(mapChipField_);
+
 }
 
 void GameScene::Update() {

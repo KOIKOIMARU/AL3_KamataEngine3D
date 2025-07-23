@@ -1,8 +1,6 @@
 #include "Player.h"
 #include <assert.h>
 #include <numbers>
-#define NOMINMAX
-#include <algorithm>
 
 using namespace KamataEngine;
 
@@ -24,59 +22,20 @@ void Player::Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera
 
 void Player::Update() {
 	// 移動入力
-	// 接地状態
-	if (onGround_) {
-		if (Input::GetInstance()->PushKey(DIK_RIGHT) || Input::GetInstance()->PushKey(DIK_LEFT)) {
-			// 左右加速
-			Vector3 acceleration = {};
-			if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
-				// 左移動中の右入力
-				if (velocity_.x < 0.0f) {
-					// 速度と逆方向に入力中は急ブレーキ
-					velocity_.x *= (1.0f - kAttenuation); // 速度を反転して減速
-				}
-				acceleration.x += kAcceleration;
-				if (lrDirection_ != LRDirection::kRight) {
-					lrDirection_ = LRDirection::kRight;
-					turnFirstRotationY_ = worldTransform_.rotation_.y;
-					turnTimer_ = 0.0f;
-				}
+	MoveInput();
 
-			} else if (Input::GetInstance()->PushKey(DIK_LEFT)) {
-				// 左移動中の右入力
-				if (velocity_.x > 0.0f) {
-					// 速度と逆方向に入力中は急ブレーキ
-					velocity_.x *= (1.0f - kAttenuation); // 速度を反転して減速
-				}
-				acceleration.x -= kAcceleration;
-				if (lrDirection_ != LRDirection::kLeft) {
-					lrDirection_ = LRDirection::kLeft;
-					turnFirstRotationY_ = worldTransform_.rotation_.y;
-					turnTimer_ = 0.0f;
-				}
-			}
-			// 加速/減速
-			velocity_ += acceleration;
+    // 衝突情報構造体を初期化
+	CollisionMapInfo collisionMapInfo;
+	collisionMapInfo.move = velocity_; // 現在の速度をコピーして渡す
 
-			// 最大速度制限
-			velocity_.x = std::clamp(velocity_.x, -kLimitRunSpeed, kLimitRunSpeed); // 最大速度を0.1に制限
-		} else {
-			// 減速
-			velocity_.x *= (1.0f - kAttenuation);
-		}
-		if (Input::GetInstance()->PushKey(DIK_UP)) {
-		   // ジャンプ加速
-			velocity_ += Vector3(0,kJumpAcceleration,0); // ジャンプ速度を設定
-		}
-	} else {
-		// 落下速度
-		velocity_ += Vector3(0,-kGravityAcceleration,0); // 重力加速度を適用
-		// 最大落下速度制限
-		velocity_.y = max(velocity_.y, -kLimitFallSpeed); // 最大落下速度を0.1に制限
-	}
+    // マップとの衝突チェック
+	CheckCollisionMap(collisionMapInfo);
 
-	// 移動
-	worldTransform_.translation_ += velocity_;
+	// 天井などの衝突結果に応じた処理（速度など）
+	HandleCeilingCollision(collisionMapInfo);
+
+	// 判定結果を反映して座標を更新
+	ApplyCollisionResult(collisionMapInfo);
 
 	bool landing = false;
 	if (velocity_.y < 0) {
@@ -130,6 +89,130 @@ void Player::Update() {
 
 void Player::Draw() {  
    model_->Draw(worldTransform_, *camera_);  
+}
+
+void Player::MoveInput() {
+	if (onGround_) {
+		if (Input::GetInstance()->PushKey(DIK_RIGHT) || Input::GetInstance()->PushKey(DIK_LEFT)) {
+			Vector3 acceleration = {};
+			if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
+				if (velocity_.x < 0.0f) {
+					velocity_.x *= (1.0f - kAttenuation);
+				}
+				acceleration.x += kAcceleration;
+				if (lrDirection_ != LRDirection::kRight) {
+					lrDirection_ = LRDirection::kRight;
+					turnFirstRotationY_ = worldTransform_.rotation_.y;
+					turnTimer_ = 0.0f;
+				}
+			} else if (Input::GetInstance()->PushKey(DIK_LEFT)) {
+				if (velocity_.x > 0.0f) {
+					velocity_.x *= (1.0f - kAttenuation);
+				}
+				acceleration.x -= kAcceleration;
+				if (lrDirection_ != LRDirection::kLeft) {
+					lrDirection_ = LRDirection::kLeft;
+					turnFirstRotationY_ = worldTransform_.rotation_.y;
+					turnTimer_ = 0.0f;
+				}
+			}
+			velocity_ += acceleration;
+			velocity_.x = std::clamp(velocity_.x, -kLimitRunSpeed, kLimitRunSpeed);
+		} else {
+			velocity_.x *= (1.0f - kAttenuation);
+		}
+
+		if (Input::GetInstance()->PushKey(DIK_UP)) {
+			velocity_ += Vector3(0, kJumpAcceleration, 0);
+		}
+	} else {
+		velocity_ += Vector3(0, -kGravityAcceleration, 0);
+		velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
+	}
+}
+
+void Player::CheckCollisionMap(CollisionMapInfo& info) {
+	// 天井との衝突判定（上方向）
+	CheckCollisionTop(info);
+
+	// 地面との衝突判定（下方向）
+	//CheckCollisionBottom(info);
+
+	// 壁との衝突判定（右方向）
+	//CheckCollisionRight(info);
+
+	// 壁との衝突判定（左方向）
+	//CheckCollisionLeft(info);
+}
+
+Vector3 Player::CornerPosition(const Vector3& center, Corner corner) {
+	Vector3 offsetTable[kNumCorner] = {
+	    {+kWidth / 2.0f, -kHeight / 2.0f, 0}, // 右下
+	    {-kWidth / 2.0f, -kHeight / 2.0f, 0}, // 左下
+	    {+kWidth / 2.0f, +kHeight / 2.0f, 0}, // 右上
+	    {-kWidth / 2.0f, +kHeight / 2.0f, 0}, // 左上
+	};
+
+	return center + offsetTable[static_cast<uint32_t>(corner)];
+}
+
+
+void Player::CheckCollisionTop(CollisionMapInfo& info) {
+	// 上昇中でなければ判定しない（早期リターン）
+	if (info.move.y <= 0) {
+		return;
+	}
+
+	std::array<Vector3, 4> positionsNew;
+	for (uint32_t i = 0; i < positionsNew.size(); ++i) {
+		positionsNew[i] = CornerPosition(worldTransform_.translation_ + info.move, static_cast<Corner>(i));
+	}
+
+	MapChipType mapChipType;
+	// 真上の当たり判定を行う
+	bool hit = false;
+
+	// 左上の判定
+	MapChipField::IndexSet indexSet;
+	indexSet = mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kLeftTop]);
+	mapChipType = mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex);
+	if (mapChipType == MapChipType::kBlock) {
+		hit = true;
+	}
+
+	// 右上の判定
+	indexSet = mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kRightTop]);
+	mapChipType = mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex);
+	if (mapChipType == MapChipType::kBlock) {
+		hit = true;
+	}
+
+	if (hit) {
+		// めり込みを排除する方向に移動量を制限
+		indexSet = mapChipField_->GetMapChipIndexSetByPosition(positionsNew[kLeftTop]); // 左右どちらでも可
+		MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
+
+		// 移動量を制限（上端と自分の下端との差分）
+		info.move.y = std::max(0.0f, rect.bottom - (worldTransform_.translation_.y + kHeight / 2.0f));
+
+		// フラグを立てる（天井に当たった）
+		info.isHitCeiling = true;
+	}
+}
+
+void Player::ApplyCollisionResult(const CollisionMapInfo& info) {
+	// 判定によって変化した移動量分だけ、実装に座標に加算して移動させる
+	worldTransform_.translation_ += info.move;
+}
+
+void Player::HandleCeilingCollision(const CollisionMapInfo& info) {
+	// 天井に当たった？
+	if (info.isHitCeiling) {
+		DebugText::GetInstance()->ConsolePrintf("hit ceiling\n");
+
+		// 上方向の速度を止める
+		velocity_.y = 0;
+	}
 }
 
 // デストラクタ
