@@ -18,7 +18,7 @@ class Player {
 	// マップとの当たり判定情報
 	struct CollisionMapInfo {
 		bool isHitCeiling = false; // 天井衝突フラグ
-		bool isOnGround = false;   // 着地フラグ
+		bool isHitGround = false;  // 着地フラグ
 		bool isHitWall = false;    // 壁接触フラグ
 		Vector3 move;              // 実際に移動できた量
 	};
@@ -28,7 +28,6 @@ class Player {
 		kLeftBottom,  // 左下
 		kRightTop,    // 右上
 		kLeftTop,     // 左上
-
 		kNumCorner // 要素数
 	};
 
@@ -58,14 +57,19 @@ private:
 	bool onGround_ = true;                                  // 地面にいるかどうか
 	static inline const float kGravityAcceleration = 0.02f; // 重力加速度
 	static inline const float kLimitFallSpeed = 0.3f;       // 最大落下速度
-	static inline const float kJumpAcceleration = 0.3f;     // ジャンプ速度
+	static inline const float kJumpAcceleration = 0.4f;     // ジャンプ速度
+	static inline const float kAttenuationLanding = 0.5f;   // 着地時の速度減衰率
+
+	static inline const float kAttenuationWall = 0.3f; // 例（減衰30%）
 
 	// マップチップのポインタ
 	MapChipField* mapChipField_ = nullptr;
 
 	// キャラクターの当たり判定サイズ
-	static inline const float kWidth = 0.8f;
-	static inline const float kHeight = 0.8f;
+	static inline const float kWidth = 0.99f;
+	static inline const float kHeight = 0.99f;
+
+
 
 
 public:
@@ -102,13 +106,18 @@ public:
 	void CheckCollisionMap(CollisionMapInfo& info); // スライドの「マップ衝突判定」
 
 	void CheckCollisionTop(CollisionMapInfo& info);
-	//void CheckCollisionBottom(CollisionMapInfo& info);
-	//void CheckCollisionRight(CollisionMapInfo& info);
-	//void CheckCollisionLeft(CollisionMapInfo& info);
+	void CheckCollisionBottom(CollisionMapInfo& info);
+	void CheckCollisionRight(CollisionMapInfo& info);
+	void CheckCollisionLeft(CollisionMapInfo& info);
 
 	Vector3 CornerPosition(const Vector3& center, Corner corner);
 
 	void ApplyCollisionResult(const CollisionMapInfo& info);
 
 	void HandleCeilingCollision(const CollisionMapInfo& info);
+
+	// 接地状態の切り替え処理
+	void SwitchLandingState(const CollisionMapInfo& info);
+
+	void HandleWallCollision(const CollisionMapInfo& info);
 };
