@@ -9,6 +9,8 @@
 #undef max
 
 class MapChipField;
+class Player;
+
 // 敵
 class Enemy {
 private:
@@ -34,7 +36,9 @@ private:
 	// 経過時間
 	float walkTimer_ = 0.0f; // 歩行モーションのタイマー
 
-
+	// キャラクターの当たり判定サイズ
+	static inline const float kWidth = 0.99f;
+	static inline const float kHeight = 0.99f;
 
 	public:
 	// デストラクタ
@@ -56,4 +60,10 @@ private:
 	/// 描画
 	/// </summary>
 	void Draw();
+
+	Vector3 GetWorldPosition();
+
+	AABB GetAABB();
+
+	void OnCollision(const Player* player);
 };

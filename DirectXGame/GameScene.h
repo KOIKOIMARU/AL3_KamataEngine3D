@@ -7,6 +7,7 @@
 #include <vector>
 #include "CameraController.h"
 
+
 // ゲームシーン
 class GameScene {
 	private:
@@ -30,7 +31,7 @@ class GameScene {
 	// 自キャラ
 	Player* player_;
 	// 敵
-	Enemy* enemy_;
+	std::list<Enemy*> enemies_;
 	// 天球
 	Skydome skydome_;
 	// マップチップフィールド
@@ -51,4 +52,8 @@ class GameScene {
 
 	void GenerateBlocks();
 
+	// 全ての当たり判定を行う
+	void CheckAllCollision();
+
+	inline bool IsCollisionAABB(const AABB& a, const AABB& b);
 };

@@ -31,16 +31,20 @@ void GameScene::Initialize() {
 	// 座標をマップチップ番号で指定
 	// プレイヤー
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
-	// 敵
-	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(5, 18);
+
 
 	// 自キャラの初期化
 	player_ = new Player();
 	player_->Initialize(playerModel_, &camera_,playerPosition);
 
 	// 敵の初期化
-	enemy_ = new Enemy();
-	enemy_->Initialize(enemyModel_, &camera_, enemyPosition);
+	for (int32_t i = 0; i < 3; ++i) {
+		Enemy* newEnemy = new Enemy();
+		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(5+i, 18);
+		newEnemy->Initialize(enemyModel_, &camera_, enemyPosition);
+
+		enemies_.push_back(newEnemy);
+	}
 
 	// 天球の初期化
 	skydome_.Initialize(modelSkydome_, &camera_, textureHandle_);
@@ -88,7 +92,14 @@ void GameScene::Update() {
 	player_->Update();
 
 	// 敵の更新
-	enemy_->Update();
+	for (Enemy* enemy : enemies_) {
+		if (enemy) {
+			enemy->Update();
+		}
+	}
+
+	// 全ての当たり判定を行う
+	CheckAllCollision();
 
 	// 天球の更新
 	skydome_.Update();
@@ -115,7 +126,11 @@ void GameScene::Draw() {
 	player_->Draw();
 
 	// 敵の描画
-	enemy_->Draw();
+	for (Enemy* enemy : enemies_) {
+		if (enemy) {
+			enemy->Draw();
+		}
+	}
 
 	// 天球の描画
 	skydome_.Draw();
@@ -144,7 +159,11 @@ GameScene::~GameScene() {
 	// 自キャラの解放
 	delete player_;
 	// 敵の解放
-	delete enemy_;
+	for (Enemy* enemy : enemies_) {
+		delete enemy;
+	}
+	enemies_.clear();
+
 	// マップチップフィールドの解放
 	delete mapChipField_;
 	// モデルブロックの解放
@@ -178,6 +197,24 @@ void GameScene::GenerateBlocks() {
 				worldTransformBlocks_[i][j] = worldTransform;
 				worldTransformBlocks_[i][j]->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
 			}
+		}
+	}
+}
+
+inline bool GameScene::IsCollisionAABB(const AABB& a, const AABB& b) {
+	return (a.min.x <= b.max.x && a.max.x >= b.min.x) && (a.min.y <= b.max.y && a.max.y >= b.min.y) && (a.min.z <= b.max.z && a.max.z >= b.min.z);
+}
+
+
+void GameScene::CheckAllCollision() {
+	AABB aabbPlayer = player_->GetAABB();
+
+	for (Enemy* enemy : enemies_) {
+		AABB aabbEnemy = enemy->GetAABB();
+
+		if (IsCollisionAABB(aabbPlayer, aabbEnemy)) {
+			player_->OnCollision(enemy);
+			enemy->OnCollision(player_);
 		}
 	}
 }

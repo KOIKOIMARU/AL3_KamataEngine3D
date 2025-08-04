@@ -402,5 +402,28 @@ void Player::HandleWallCollision(const CollisionMapInfo& info) {
 	}
 }
 
+Vector3 Player::GetWorldPosition() {
+	Vector3 worldPos;
+	worldPos.x = worldTransform_.matWorld_.m[3][0]; // Tx
+	worldPos.y = worldTransform_.matWorld_.m[3][1]; // Ty
+	worldPos.z = worldTransform_.matWorld_.m[3][2]; // Tz
+	return worldPos;
+}
+
+AABB Player::GetAABB() {
+	Vector3 worldPos = GetWorldPosition();
+
+	AABB aabb;
+	aabb.min = {worldPos.x - kWidth / 2.0f, worldPos.y - kHeight / 2.0f, worldPos.z - kWidth / 2.0f};
+
+	aabb.max = {worldPos.x + kWidth / 2.0f, worldPos.y + kHeight / 2.0f, worldPos.z + kWidth / 2.0f};
+
+	return aabb;
+}
+
+void Player::OnCollision(const Enemy* enemy) {
+	(void)enemy; 
+}
+
 // デストラクタ
 Player::~Player() {}

@@ -9,12 +9,14 @@
 #undef max
 
 class MapChipField;
-
+class Enemy;
 
 /// <summary>
 /// 自キャラ
 /// </summary>
 class Player {
+
+
 	// マップとの当たり判定情報
 	struct CollisionMapInfo {
 		bool isHitCeiling = false; // 天井衝突フラグ
@@ -120,4 +122,10 @@ public:
 	void SwitchLandingState(const CollisionMapInfo& info);
 
 	void HandleWallCollision(const CollisionMapInfo& info);
+
+	Vector3 GetWorldPosition();
+
+	AABB GetAABB(); // AABBを取得する関数
+
+	void OnCollision(const Enemy* enemy);
 };

@@ -43,5 +43,23 @@ void Enemy::Update() {
 
 void Enemy::Draw() { model_->Draw(worldTransform_, *camera_); }
 
+Vector3 Enemy::GetWorldPosition() {
+	Vector3 worldPos;
+	worldPos.x = worldTransform_.matWorld_.m[3][0]; // Tx
+	worldPos.y = worldTransform_.matWorld_.m[3][1]; // Ty
+	worldPos.z = worldTransform_.matWorld_.m[3][2]; // Tz
+	return worldPos;
+}
+
+AABB Enemy::GetAABB() {
+	Vector3 pos = GetWorldPosition();
+	return {
+	    {pos.x - kWidth / 2.0f, pos.y - kHeight / 2.0f, pos.z - kWidth / 2.0f},
+        {pos.x + kWidth / 2.0f, pos.y + kHeight / 2.0f, pos.z + kWidth / 2.0f}
+    };
+}
+
+void Enemy::OnCollision(const Player* player) { (void)player; }
+
 // デストラクタ
 Enemy::~Enemy() {};
