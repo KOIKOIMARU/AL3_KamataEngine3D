@@ -16,6 +16,7 @@ void GameScene::Initialize() {
 	// 3Dモデルの生成
 	playerModel_ = Model::CreateFromOBJ("player",true);
 	enemyModel_ = Model::CreateFromOBJ("enemy", true);
+	particleModel_ = Model::CreateFromOBJ("particle", true);
 	modelSkydome_ = Model::CreateFromOBJ("sky_sphere", true);
 
 	// モデルブロックの生成
@@ -45,6 +46,10 @@ void GameScene::Initialize() {
 
 		enemies_.push_back(newEnemy);
 	}
+
+	// 仮生成
+	deathParticles_ = new DeathParticles();
+	deathParticles_->Initialize(particleModel_, &camera_, playerPosition);
 
 	// 天球の初期化
 	skydome_.Initialize(modelSkydome_, &camera_, textureHandle_);
@@ -101,6 +106,11 @@ void GameScene::Update() {
 	// 全ての当たり判定を行う
 	CheckAllCollision();
 
+	// デスパーティクルの更新
+	if (deathParticles_) {
+		deathParticles_->Update();
+	}
+
 	// 天球の更新
 	skydome_.Update();
 
@@ -130,6 +140,11 @@ void GameScene::Draw() {
 		if (enemy) {
 			enemy->Draw();
 		}
+	}
+
+	// デスパーティクルの描画
+	if (deathParticles_) {
+		deathParticles_->Draw();
 	}
 
 	// 天球の描画
@@ -163,7 +178,8 @@ GameScene::~GameScene() {
 		delete enemy;
 	}
 	enemies_.clear();
-
+	// パーティクルの解放
+	delete deathParticles_;
 	// マップチップフィールドの解放
 	delete mapChipField_;
 	// モデルブロックの解放

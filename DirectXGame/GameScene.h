@@ -6,6 +6,7 @@
 #include "MapChipField.h"
 #include <vector>
 #include "CameraController.h"
+#include "DeathParticles.h"
 
 
 // ゲームシーン
@@ -19,6 +20,7 @@ class GameScene {
 	// 3Dモデル
 	KamataEngine::Model* playerModel_ = nullptr;
 	KamataEngine::Model* enemyModel_ = nullptr;
+	KamataEngine::Model* particleModel_ = nullptr;
 	KamataEngine::Model* modelSkydome_ = nullptr;
 	// モデルブロック
 	KamataEngine::Model* modelBlock_ = nullptr;
@@ -32,6 +34,8 @@ class GameScene {
 	Player* player_;
 	// 敵
 	std::list<Enemy*> enemies_;
+	// パーティクル
+	DeathParticles* deathParticles_ = nullptr;
 	// 天球
 	Skydome skydome_;
 	// マップチップフィールド
