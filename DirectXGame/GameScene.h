@@ -1,6 +1,7 @@
 #pragma once
 #include "KamataEngine.h"
 #include "Player.h"
+#include "Enemy.h"
 #include "Skydome.h"
 #include "MapChipField.h"
 #include <vector>
@@ -15,7 +16,8 @@ class GameScene {
 	public:
 
 	// 3Dモデル
-	KamataEngine::Model* model_ = nullptr;
+	KamataEngine::Model* playerModel_ = nullptr;
+	KamataEngine::Model* enemyModel_ = nullptr;
 	KamataEngine::Model* modelSkydome_ = nullptr;
 	// モデルブロック
 	KamataEngine::Model* modelBlock_ = nullptr;
@@ -27,6 +29,8 @@ class GameScene {
 	bool isDebugCameraActive = false; 
 	// 自キャラ
 	Player* player_;
+	// 敵
+	Enemy* enemy_;
 	// 天球
 	Skydome skydome_;
 	// マップチップフィールド

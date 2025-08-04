@@ -14,7 +14,8 @@ void GameScene::Initialize() {
 	textureHandle_ = TextureManager::Load("sample.png");
 	
 	// 3Dモデルの生成
-	model_ = Model::CreateFromOBJ("player",true);
+	playerModel_ = Model::CreateFromOBJ("player",true);
+	enemyModel_ = Model::CreateFromOBJ("enemy", true);
 	modelSkydome_ = Model::CreateFromOBJ("sky_sphere", true);
 
 	// モデルブロックの生成
@@ -28,11 +29,18 @@ void GameScene::Initialize() {
 	debugCamera_ = new DebugCamera(1280,720);
 
 	// 座標をマップチップ番号で指定
+	// プレイヤー
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
+	// 敵
+	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(5, 18);
 
 	// 自キャラの初期化
 	player_ = new Player();
-	player_->Initialize(model_, &camera_,playerPosition);
+	player_->Initialize(playerModel_, &camera_,playerPosition);
+
+	// 敵の初期化
+	enemy_ = new Enemy();
+	enemy_->Initialize(enemyModel_, &camera_, enemyPosition);
 
 	// 天球の初期化
 	skydome_.Initialize(modelSkydome_, &camera_, textureHandle_);
@@ -79,6 +87,9 @@ void GameScene::Update() {
 	// 自キャラの更新
 	player_->Update();
 
+	// 敵の更新
+	enemy_->Update();
+
 	// 天球の更新
 	skydome_.Update();
 
@@ -103,6 +114,9 @@ void GameScene::Draw() {
 	// 自キャラの描画
 	player_->Draw();
 
+	// 敵の描画
+	enemy_->Draw();
+
 	// 天球の描画
 	skydome_.Draw();
 
@@ -125,10 +139,12 @@ GameScene::~GameScene() {
 	// デバッグカメラの解放
 	delete debugCamera_;
 	// スプライトの解放
-	delete model_;
+	delete playerModel_;
 	delete modelSkydome_;
 	// 自キャラの解放
 	delete player_;
+	// 敵の解放
+	delete enemy_;
 	// マップチップフィールドの解放
 	delete mapChipField_;
 	// モデルブロックの解放

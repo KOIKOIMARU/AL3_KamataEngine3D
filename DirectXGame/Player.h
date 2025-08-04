@@ -77,7 +77,7 @@ public:
 	~Player();
 
 	/// <summary>
-	///
+	/// 初期化
 	/// </summary>
 	/// <param name="model"></param>
 	/// <param name="textureHandle"></param>
