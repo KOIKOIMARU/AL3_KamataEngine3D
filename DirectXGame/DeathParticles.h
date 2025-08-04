@@ -46,4 +46,7 @@ public:
 	Matrix4x4 MakeRotateZ(float angle);
 
 	Vector3 Transform(const Vector3& v, const Matrix4x4& m);
+
+	// デスフラグのゲッター
+	bool IsFinished() const { return isFinished_; }
 };

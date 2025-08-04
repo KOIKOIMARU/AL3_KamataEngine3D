@@ -71,8 +71,8 @@ private:
 	static inline const float kWidth = 0.99f;
 	static inline const float kHeight = 0.99f;
 
-
-
+	// デスフラグ
+	bool isDead_ = false;
 
 public:
 	// デストラクタ
@@ -128,4 +128,7 @@ public:
 	AABB GetAABB(); // AABBを取得する関数
 
 	void OnCollision(const Enemy* enemy);
+
+	// デスフラグゲッター
+	bool IsDead() const { return isDead_; }
 };

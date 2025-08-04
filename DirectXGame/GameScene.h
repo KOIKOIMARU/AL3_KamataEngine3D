@@ -11,6 +11,13 @@
 
 // ゲームシーン
 class GameScene {
+	// ゲームのフェーズ
+	enum class Phase{
+		kPlay,
+		kDeath
+	};
+	// 現在のフェーズ
+	Phase phase_;
 	private:
 		uint32_t textureHandle_ = 0;
 	    std::vector<std::vector<KamataEngine::WorldTransform*>> worldTransformBlocks_;
@@ -43,6 +50,8 @@ class GameScene {
 	// カメラコントローラー
 	CameraController* cameraController_ = nullptr;
 	
+	// 終了フラグ
+	bool finished_ = false;
 
 	// デストラクタ
 	~GameScene();
@@ -60,4 +69,14 @@ class GameScene {
 	void CheckAllCollision();
 
 	inline bool IsCollisionAABB(const AABB& a, const AABB& b);
+
+	void UpdatePlayPhase();
+
+	void UpdateDeathPhase();
+
+	// フェーズの切り替え
+	void ChangePhase();
+
+	// デスフラグのゲッター
+	bool IsFinished() const { return finished_; }
 };
