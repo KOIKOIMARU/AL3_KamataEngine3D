@@ -66,8 +66,11 @@ void GameScene::Initialize() {
 	// その後プレイヤーに渡す
 	player_->SetMapChipField(mapChipField_);
 
-	// ゲームプレイフェーズから開始
-	phase_ = Phase::kPlay;
+	fade_ = new Fade();
+	fade_->Initialize();
+	fade_->Start(Fade::Status::FadeIn, kFadeDuration); // フェードイン開始
+	phase_ = Phase::kFadeIn;                   
+
 
 }
 
@@ -82,11 +85,24 @@ void GameScene::Update() {
 	#endif 
 
 switch (phase_) {
+	case Phase::kFadeIn:
+		fade_->Update();
+		UpdatePlayPhase();
+		if (fade_->IsFinished()) {
+			phase_ = Phase::kPlay;
+		}
+		break;
 	case Phase::kPlay:
 		UpdatePlayPhase();
 		break;
 	case Phase::kDeath:
 		UpdateDeathPhase();
+		break;
+	case Phase::kFadeOut:
+		fade_->Update();
+		if (fade_->IsFinished()) {
+			finished_ = true; // シーン終了
+		}
 		break;
 	}
 }
@@ -97,7 +113,7 @@ void GameScene::Draw() {
 	Model::PreDraw(dx_common->GetCommandList());
 
 	// 自キャラの描画
-	if (phase_ == Phase::kPlay) {
+	if (phase_ == Phase::kPlay || phase_ == Phase::kFadeIn) {
 		player_->Draw();
 	}
 
@@ -128,6 +144,10 @@ void GameScene::Draw() {
 		}
 	}
 	Model::PostDraw();
+
+	if (fade_) {
+		fade_->Draw();
+	}
 }
 
 
@@ -160,6 +180,8 @@ GameScene::~GameScene() {
 	worldTransformBlocks_.clear();
 	// カメラコントローラーの解放
 	delete cameraController_;
+	// フェード解放
+	delete fade_;
 }
 
 void GameScene::GenerateBlocks() {
@@ -281,7 +303,8 @@ void GameScene::UpdateDeathPhase() {
 	}
 
 	if (deathParticles_ && deathParticles_->IsFinished()) {
-		finished_ = true;
+		fade_->Start(Fade::Status::FadeOut, kFadeDuration);
+		phase_ = Phase::kFadeOut;
 	}
 
 

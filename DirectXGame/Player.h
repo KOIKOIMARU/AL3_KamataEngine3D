@@ -15,8 +15,7 @@ class Enemy;
 /// 自キャラ
 /// </summary>
 class Player {
-
-
+public:
 	// マップとの当たり判定情報
 	struct CollisionMapInfo {
 		bool isHitCeiling = false; // 天井衝突フラグ
@@ -30,51 +29,9 @@ class Player {
 		kLeftBottom,  // 左下
 		kRightTop,    // 右上
 		kLeftTop,     // 左上
-		kNumCorner // 要素数
+		kNumCorner    // 要素数
 	};
 
-private:
-	// ワールド変換データ
-	KamataEngine::WorldTransform worldTransform_;
-	// モデル
-	KamataEngine::Model* model_ = nullptr;
-	// カメラ
-	KamataEngine::Camera* camera_ = nullptr;
-	KamataEngine::Vector3 velocity_ = {};
-
-	// 向き（左右）
-	enum class LRDirection {
-		kRight,
-		kLeft,
-	};
-	LRDirection lrDirection_ = LRDirection::kRight;
-
-	float turnFirstRotationY_ = 0.0f;                // 旋回開始時の角度
-	float turnTimer_ = 0.0f;                         // 旋回時間
-	static inline const float kAcceleration = 0.01f; // 移動速度
-	static inline const float kAttenuation = 0.1f;   // 減速率
-	static inline const float kLimitRunSpeed = 0.1f; // 最大速度
-	static inline const float kTimeRun = 0.3f;       // 旋回時間<秒>
-
-	bool onGround_ = true;                                  // 地面にいるかどうか
-	static inline const float kGravityAcceleration = 0.02f; // 重力加速度
-	static inline const float kLimitFallSpeed = 0.3f;       // 最大落下速度
-	static inline const float kJumpAcceleration = 0.4f;     // ジャンプ速度
-	static inline const float kAttenuationLanding = 0.5f;   // 着地時の速度減衰率
-
-	static inline const float kAttenuationWall = 0.3f; // 例（減衰30%）
-
-	// マップチップのポインタ
-	MapChipField* mapChipField_ = nullptr;
-
-	// キャラクターの当たり判定サイズ
-	static inline const float kWidth = 0.99f;
-	static inline const float kHeight = 0.99f;
-
-	// デスフラグ
-	bool isDead_ = false;
-
-public:
 	// デストラクタ
 	~Player();
 
@@ -131,4 +88,45 @@ public:
 
 	// デスフラグゲッター
 	bool IsDead() const { return isDead_; }
+
+private:
+	// ワールド変換データ
+	KamataEngine::WorldTransform worldTransform_;
+	// モデル
+	KamataEngine::Model* model_ = nullptr;
+	// カメラ
+	KamataEngine::Camera* camera_ = nullptr;
+	KamataEngine::Vector3 velocity_ = {};
+
+	// 向き（左右）
+	enum class LRDirection {
+		kRight,
+		kLeft,
+	};
+	LRDirection lrDirection_ = LRDirection::kRight;
+
+	float turnFirstRotationY_ = 0.0f;                // 旋回開始時の角度
+	float turnTimer_ = 0.0f;                         // 旋回時間
+	static inline const float kAcceleration = 0.01f; // 移動速度
+	static inline const float kAttenuation = 0.1f;   // 減速率
+	static inline const float kLimitRunSpeed = 0.1f; // 最大速度
+	static inline const float kTimeRun = 0.3f;       // 旋回時間<秒>
+
+	bool onGround_ = true;                                  // 地面にいるかどうか
+	static inline const float kGravityAcceleration = 0.02f; // 重力加速度
+	static inline const float kLimitFallSpeed = 0.3f;       // 最大落下速度
+	static inline const float kJumpAcceleration = 0.4f;     // ジャンプ速度
+	static inline const float kAttenuationLanding = 0.5f;   // 着地時の速度減衰率
+
+	static inline const float kAttenuationWall = 0.3f; // 例（減衰30%）
+
+	// マップチップのポインタ
+	MapChipField* mapChipField_ = nullptr;
+
+	// キャラクターの当たり判定サイズ
+	static inline const float kWidth = 0.99f;
+	static inline const float kHeight = 0.99f;
+
+	// デスフラグ
+	bool isDead_ = false;
 };

@@ -13,6 +13,33 @@ class Player;
 
 // 敵
 class Enemy {
+public:
+	// デストラクタ
+	~Enemy();
+
+	/// <summary>
+	/// 初期化
+	/// </summary>
+	/// <param name="model"></param>
+	/// <param name="textureHandle"></param>
+	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
+
+	/// <summary>
+	/// 更新
+	/// </summary>
+	void Update();
+
+	/// <summary>
+	/// 描画
+	/// </summary>
+	void Draw();
+
+	Vector3 GetWorldPosition();
+
+	AABB GetAABB();
+
+	void OnCollision(const Player* player);
+
 private:
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransform_;
@@ -40,30 +67,4 @@ private:
 	static inline const float kWidth = 0.99f;
 	static inline const float kHeight = 0.99f;
 
-	public:
-	// デストラクタ
-	~Enemy();
-
-	/// <summary>
-	/// 初期化
-	/// </summary>
-	/// <param name="model"></param>
-	/// <param name="textureHandle"></param>
-	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
-
-	/// <summary>
-	/// 更新
-	/// </summary>
-	void Update();
-
-	/// <summary>
-	/// 描画
-	/// </summary>
-	void Draw();
-
-	Vector3 GetWorldPosition();
-
-	AABB GetAABB();
-
-	void OnCollision(const Player* player);
 };

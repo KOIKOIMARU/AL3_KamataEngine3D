@@ -11,7 +11,7 @@
 class Player;
 
 class CameraController {
-private:
+public:
 	// 構造体
 	struct Rect {
 		float left = 0.0f;
@@ -19,7 +19,25 @@ private:
 		float bottom = 0.0f;
 		float top = 1.0f;
 	};
+	/// <summary>
+	/// 初期化
+	/// </summary>
+	void Initialize();
 
+	/// <summary>
+	/// 更新
+	/// </summary>
+	void Update();
+
+	void SetTarget(Player* target);
+
+	void SetCamera(KamataEngine::Camera* camera);
+
+	void SetMovableArea(const Rect& area) { movableArea_ = area; }
+
+	void Reset();
+
+private:
 	KamataEngine::Camera* camera_ = nullptr;
 	Player* target_ = nullptr;
 	KamataEngine::Vector3 targetOffset_ = {0.0f, 0.0f, -15.0f};
@@ -37,27 +55,5 @@ private:
 	    -2.0f, 
 	    2.0f   
 	};
-
-
-
-public:
-
-	/// <summary>
-	/// 初期化
-	/// </summary>
-	void Initialize();
-
-	/// <summary>
-	/// 更新
-	/// </summary>
-	void Update();
-
-	void SetTarget(Player* target);
-
-	void SetCamera(KamataEngine::Camera* camera);
-
-   void SetMovableArea(const Rect& area) { movableArea_ = area; }
-
-	void Reset();
 };
 
