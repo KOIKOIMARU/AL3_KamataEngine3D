@@ -15,6 +15,7 @@ void GameScene::Initialize() {
 	
 	// 3Dモデルの生成
 	playerModel_ = Model::CreateFromOBJ("player",true);
+	playerAttackModel_ = Model::CreateFromOBJ("attackEffect", true);
 	enemyModel_ = Model::CreateFromOBJ("enemy", true);
 	particleModel_ = Model::CreateFromOBJ("particle", true);
 	modelSkydome_ = Model::CreateFromOBJ("sky_sphere", true);
@@ -36,7 +37,7 @@ void GameScene::Initialize() {
 
 	// 自キャラの初期化
 	player_ = new Player();
-	player_->Initialize(playerModel_, &camera_,playerPosition);
+	player_->Initialize(playerModel_,playerAttackModel_, &camera_,playerPosition);
 
 	// 敵の初期化
 	for (int32_t i = 0; i < 3; ++i) {
@@ -232,7 +233,7 @@ void GameScene::UpdatePlayPhase() {
 	// 敵の更新
 	for (Enemy* enemy : enemies_) {
 		if (enemy) {
-			enemy->Update();
+			//enemy->Update();
 		}
 	}
 	// カメラコントローラの更新

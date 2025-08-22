@@ -32,6 +32,20 @@ public:
 		kNumCorner    // 要素数
 	};
 
+	// 振る舞い
+	enum class Behavior {
+		kRoot, // 通常状態
+		kAttack, // 攻撃中
+		kUnknown
+	};
+
+	// 攻撃フェーズの列挙型
+	enum class AttackPhase {
+		Tame, // 溜め
+		Dash, // 突進
+		Recoil   // 余韻
+	};
+
 	// デストラクタ
 	~Player();
 
@@ -40,7 +54,7 @@ public:
 	/// </summary>
 	/// <param name="model"></param>
 	/// <param name="textureHandle"></param>
-	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
+	void Initialize(KamataEngine::Model* model, KamataEngine::Model* modelAttack,KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
 
 	/// <summary>
 	/// 更新
@@ -89,11 +103,30 @@ public:
 	// デスフラグゲッター
 	bool IsDead() const { return isDead_; }
 
+	// 通常行動更新
+	void BehaviorRootUpdate();
+
+	// 攻撃行動更新
+	void BehaviorAttackUpdate();
+
+	// 通常行動初期化
+	void BehaviorRootInitialize();
+
+	// 攻撃行動初期化
+	void BehaviorAttackInitialize();
+
+	float EaseIn(float start, float end, float t);
+
+	float EaseOut(float start, float end, float t);
+
 private:
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransform_;
 	// モデル
 	KamataEngine::Model* model_ = nullptr;
+	// 攻撃エフェクト
+	KamataEngine::Model* modelAttack_ = nullptr;
+	KamataEngine::WorldTransform worldTransformAttack_;
 	// カメラ
 	KamataEngine::Camera* camera_ = nullptr;
 	KamataEngine::Vector3 velocity_ = {};
@@ -129,4 +162,17 @@ private:
 
 	// デスフラグ
 	bool isDead_ = false;
+
+	// 振る舞い
+	Behavior behavior_ = Behavior::kRoot;
+
+	// 次のふるまいリクエスト
+	Behavior behaviorRequest_ = Behavior::kUnknown;
+
+	// 攻撃経過カウンター
+	uint32_t attackParameter_ = 0;
+
+	// 現在の攻撃フェーズ
+	AttackPhase attackPhase_ = AttackPhase::Tame;
+
 };

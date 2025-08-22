@@ -4,13 +4,15 @@
 
 using namespace KamataEngine;
 
-void Player::Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position) {
+void Player::Initialize(KamataEngine::Model* model, KamataEngine::Model* modelAttack,KamataEngine::Camera* camera, const KamataEngine::Vector3& position) {
 	// NULLポインタチェック
 	assert(model);
+	assert(modelAttack);
 	assert(camera);
 
 	// モデルの設定
 	model_ = model;
+	modelAttack_ = modelAttack;
 	camera_ = camera;
 
 	// ワールド変換データの初期化
@@ -18,60 +20,150 @@ void Player::Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera
 
 	worldTransform_.translation_ = position;
 	worldTransform_.rotation_.y = std::numbers::pi_v<float> / 2.0f; // Y軸を90度回転
+	worldTransformAttack_.Initialize();
 }
 
 void Player::Update() {
-	// 移動入力
+	if (behaviorRequest_ != Behavior::kUnknown) {
+		// behaviorRequest_ に値が入っていたらビヘイビア遷移する
+		behavior_ = behaviorRequest_; // ビヘイビア変更
+
+		// 初期化処理（新しいビヘイビアに応じて）
+		switch (behavior_) {
+		case Behavior::kRoot:
+		default:
+			BehaviorRootInitialize();
+			break;
+		case Behavior::kAttack:
+			BehaviorAttackInitialize();
+			break;
+		}
+
+		behaviorRequest_ = Behavior::kUnknown; // リクエストリセット
+	}
+
+	// ビヘイビアごとの更新処理を呼ぶ
+	switch (behavior_) {
+	case Behavior::kRoot:
+	default:
+		BehaviorRootUpdate();
+		break;
+	case Behavior::kAttack:
+		BehaviorAttackUpdate();
+		break;
+	}
+}
+
+
+void Player::BehaviorRootUpdate() {
 	MoveInput();
 
-	// 衝突情報構造体を初期化
+	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+		behaviorRequest_ = Behavior::kAttack;
+	}
+
 	CollisionMapInfo collisionMapInfo;
-	collisionMapInfo.move = velocity_; // 現在の速度をコピーして渡す
-
-	// マップとの衝突チェック
+	collisionMapInfo.move = velocity_;
 	CheckCollisionMap(collisionMapInfo);
-
-	// 天井などの衝突結果に応じた処理（速度など）
 	HandleCeilingCollision(collisionMapInfo);
-
 	HandleWallCollision(collisionMapInfo);
-
-
-	// 判定結果を反映して座標を更新
 	ApplyCollisionResult(collisionMapInfo);
-
-	// 接地状態の切り替え
 	SwitchLandingState(collisionMapInfo);
 
-
-	// 旋回制御
 	if (turnTimer_ > 0.0f) {
-		// 旋回タイマーを1/60秒だけカウントダウンする
 		turnTimer_ -= 1.0f / 60.0f;
-
-		// 左右の自キャラ角度テーブル
 		float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
-
-		// 状態に応じた目標角度を取得する
 		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
-
-		// 自キャラの角度を設定する（線形補間 or 補間関数）
 		float t = 1.0f - (turnTimer_ / kTimeRun);
 		worldTransform_.rotation_.y = std::lerp(turnFirstRotationY_, destinationRotationY, t);
 	} else {
-		// 左右の自キャラ角度テーブル
 		float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
-
-		// 状態に応じた角度を即設定する
 		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
 		worldTransform_.rotation_.y = destinationRotationY;
 	}
 
-	// 行列を定数バッファに転送
 	UpdateWorldTransform(worldTransform_);
+	UpdateWorldTransform(worldTransformAttack_);
 }
 
-void Player::Draw() { model_->Draw(worldTransform_, *camera_); }
+void Player::BehaviorAttackUpdate() {
+	// 前方向ベクトル（Y軸回転からZ-方向へ）
+	Vector3 direction = {std::sin(worldTransform_.rotation_.y), 0.0f, std::cos(worldTransform_.rotation_.y)};
+
+	// 攻撃フェーズに応じた処理
+	switch (attackPhase_) {
+	case AttackPhase::Tame:
+	default: {
+		float t = static_cast<float>(attackParameter_) / 20.0f;
+		worldTransform_.scale_.z = EaseOut(1.0f, 0.3f, t);
+		worldTransform_.scale_.y = EaseOut(1.0f, 1.6f, t);
+
+		// 前進動作へ移行
+		if (attackParameter_ >= 20.0f) {
+			attackPhase_ = AttackPhase::Dash;
+			attackParameter_ = 0; // カウンターをリセット
+		}
+
+		velocity_ = {0.0f, 0.0f, 0.0f}; // 止まる
+		break;
+	}
+
+	case AttackPhase::Dash: {
+		float t = static_cast<float>(attackParameter_) / 20.0f;
+		worldTransform_.scale_.z = EaseOut(0.3f, 1.3f, t);
+		worldTransform_.scale_.y = EaseIn(1.6f, 0.7f, t);
+
+		// 前方向に移動
+		velocity_ = direction * 0.2f;
+
+		// 余韻動作へ移行
+		if (attackParameter_ >= 20.0f) {
+			attackPhase_ = AttackPhase::Recoil;
+			attackParameter_ = 0;
+		}
+		break;
+	}
+
+	case AttackPhase::Recoil: {
+		float t = static_cast<float>(attackParameter_) / 20.0f;
+		worldTransform_.scale_.z = EaseOut(1.3f, 1.0f, t);
+		worldTransform_.scale_.y = EaseOut(0.7f, 1.0f, t);
+
+		velocity_ = {0.0f, 0.0f, 0.0f}; // 止まる
+		break;
+	}
+	}
+
+	worldTransformAttack_.translation_ = worldTransform_.translation_;
+	worldTransformAttack_.rotation_ = worldTransform_.rotation_;
+
+	// 衝突判定と移動適用は共通処理
+	CollisionMapInfo collisionMapInfo;
+	collisionMapInfo.move = velocity_;
+	CheckCollisionMap(collisionMapInfo);
+	ApplyCollisionResult(collisionMapInfo);
+
+	// 行列更新
+	UpdateWorldTransform(worldTransform_);
+	UpdateWorldTransform(worldTransformAttack_);
+
+	// カウント進める（共通）
+	attackParameter_++;
+
+	// 攻撃行動終了
+	if (attackPhase_ == AttackPhase::Recoil && attackParameter_ >= 20) {
+		behaviorRequest_ = Behavior::kRoot;
+		attackPhase_ = AttackPhase::Tame;
+		attackParameter_ = 0;
+	}
+}
+
+
+void Player::Draw() { 
+	model_->Draw(worldTransform_, *camera_); 
+	if (attackPhase_ == AttackPhase::Dash || attackPhase_ == AttackPhase::Recoil)
+	modelAttack_->Draw(worldTransformAttack_, *camera_);
+}
 
 void Player::MoveInput() {
 	if (onGround_) {
@@ -424,6 +516,29 @@ AABB Player::GetAABB() {
 void Player::OnCollision(const Enemy* enemy) {
 	(void)enemy; 
 	isDead_ = true;
+}
+
+
+void Player::BehaviorRootInitialize() {
+	
+}
+
+void Player::BehaviorAttackInitialize() {
+	// カウンター初期化
+	attackParameter_ = 0;
+}
+
+float Player::EaseIn(float start, float end, float t) {
+	// 指数イージング（InQuad: 最初ゆっくり）
+	t = t * t;
+	return start + (end - start) * t;
+}
+
+
+float Player::EaseOut(float start, float end, float t) {
+	// 指数イージング（OutQuad: 加速して減速する）
+	t = 1.0f - (1.0f - t) * (1.0f - t); // t を EaseOut に変換
+	return start + (end - start) * t;
 }
 
 // デストラクタ
