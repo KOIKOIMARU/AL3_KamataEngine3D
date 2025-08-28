@@ -1,47 +1,32 @@
 #pragma once
 #include "KamataEngine.h"
-#include "Transform.h" 
-#include "MapChipField.h"
-#include "Fade.h"
-
+#include "Transform.h"
+#include "CameraController.h"
 
 class TitleScene {
 public:
-	enum class Phase { 
-		kFadeIn, 
-		kMain, 
-		kFadeOut };
-
 	void Initialize();
-
-	/// <summary>
-	/// 更新
-	/// </summary>
 	void Update();
-
-	/// <summary>
-	/// 描画
-	/// </summary>
 	void Draw();
 
-	~TitleScene();
-
-	// デスフラグのゲッター
 	bool IsFinished() const { return finished_; }
 
 private:
-	Phase phase_ = Phase::kFadeIn;
+	KamataEngine::Sprite* spBG_ = nullptr;
+	KamataEngine::Sprite* spLogo_ = nullptr;
+	KamataEngine::Sprite* spPress_ = nullptr;
 
-	KamataEngine::WorldTransform titleTransform_;
-	KamataEngine::WorldTransform playerTransform_;
-	KamataEngine::Model* titleModel_ = nullptr;
-	KamataEngine::Model* playerModel_ = nullptr;
-	Fade* fade_ = nullptr;
-	// カメラ
-	KamataEngine::Camera* camera_ = nullptr;
-	// 終了フラグ
+	uint32_t texBG_ = 0;
+	uint32_t texLogo_ = 0;
+	uint32_t texPress_ = 0;
+
+	float t_ = 0.0f;
 	bool finished_ = false;
 
-	const float kFadeDuration = 1.0f; // フェード時間（1秒）
+// --- BGM ---
+	int bgmData_ = 0;      // waveハンドル
+	int bgmVoice_ = -1;    // 再生ボイスID
+	float bgmVol_ = 0.65f; // 初期音量
+	bool bgmFadeOut_ = false;
 
 };

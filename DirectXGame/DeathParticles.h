@@ -17,15 +17,14 @@ public:
 	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
 
 	void Update();
-
 	void Draw();
 
 	Matrix4x4 MakeRotateZ(float angle);
-
 	Vector3 Transform(const Vector3& v, const Matrix4x4& m);
 
 	// デスフラグのゲッター
 	bool IsFinished() const { return isFinished_; }
+
 private:
 	// モデル
 	KamataEngine::Model* model_ = nullptr;
@@ -44,7 +43,7 @@ private:
 	float counter_ = 0.0f;    // 経過時間カウント
 
 	// 色変更オブジェクト
-	KamataEngine::ObjectColor objectColor_;
-	// 色の数値（RGBA）
-	KamataEngine::Vector4 color_;
+	KamataEngine::ObjectColor objectColor_{};
+	// ★ 未初期化対策：RGBA = (0,0,0,0) で初期化
+	KamataEngine::Vector4 color_ = {0.0f, 0.0f, 0.0f, 0.0f};
 };

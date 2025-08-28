@@ -1,4 +1,4 @@
-# Blender 4.4.1 MTL File: 'sky_sphere.blend'
+# Blender 4.4.1 MTL File: 'None'
 # www.blender.org
 
 newmtl マテリアル.001
@@ -9,4 +9,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 1
-map_Kd AL3/AL3_KamataEngine3D/DirectXGame/Resources/sky_sphere/sky_sphere.png
+map_Kd sky_sphere.png
